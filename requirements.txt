@@ -1,0 +1,12 @@
+loguru==0.7.2
+python-dotenv==1.0.1
+SQLAlchemy==2.0.32
+pydantic==2.8.2
+fastapi==0.112.0
+fastapi-pagination==0.12.26
+redis==5.0.8
+aiohttp==3.10.1
+aiomysql==0.2.0
+alembic==1.13.2
+uvicorn[standard]==0.30.5
+fastapi-utilities==0.2.0
