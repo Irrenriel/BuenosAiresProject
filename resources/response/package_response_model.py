@@ -8,6 +8,6 @@ class PackageResponseModel(BaseModel):
     id: int
     name: str
     weight: float
-    type: str
+    type: dict
     value: float
     delivery_cost: Optional[float] = None

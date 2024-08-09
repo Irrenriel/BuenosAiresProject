@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, paginate
+from fastapi_pagination.utils import disable_installed_extensions_check
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db import SessionContext
 from core.redis_db import redis_db
-from resources.response import PackageResponseModel, PackageCreateModel, PackageTypeResponseModel
+from resources.response import PackageResponseModel, PackageCreateModel, PackageTypeResponseModel, \
+    PackageTypeCreateModel
 from resources.tables import PackageModel, PackageTypeModel
 
 router = APIRouter()
@@ -30,23 +32,46 @@ async def create_package(package: PackageCreateModel, session: AsyncSession = De
     )
 
     await session.commit()
+    await session.refresh(new_package)
 
     return PackageResponseModel(
         id=new_package.id,
         name=new_package.name,
         weight=new_package.weight,
-        type=new_package.type.name,
+        type={'id': new_package.type.id, 'name': new_package.type.name},
         value=new_package.value,
         delivery_cost=new_package.delivery_cost,
     )
 
 
+@router.post(
+    '/types/create/',
+    response_model=PackageTypeResponseModel,
+    description="Create a new package type",
+)
+async def create_package_type(package_type: PackageTypeCreateModel, session: AsyncSession = Depends(SessionContext)):
+    session.add(
+        new_package_type := PackageTypeModel(
+            name=package_type.name,
+        )
+    )
+
+    await session.commit()
+    await session.refresh(new_package_type)
+
+    return PackageTypeResponseModel(
+        id=new_package_type.id,
+        name=new_package_type.name,
+    )
+
+
 @router.get(
-    "/packages/types",
+    "/types",
     response_model=Page[PackageTypeResponseModel],
     description="List all available package types",
 )
 async def get_package_types(session: AsyncSession = Depends(SessionContext)):
+    disable_installed_extensions_check()
     return paginate(
         [
             PackageTypeResponseModel(
@@ -63,13 +88,14 @@ async def get_package_types(session: AsyncSession = Depends(SessionContext)):
     description="List all available packages",
 )
 async def get_packages(session: AsyncSession = Depends(SessionContext)):
+    disable_installed_extensions_check()
     return paginate(
         [
             PackageResponseModel(
                 id=package.id,
                 name=package.name,
                 weight=package.weight,
-                type=package.type.name,
+                type={'id': package.type.id, 'name': package.type.name},
                 value=package.value,
                 delivery_cost=package.delivery_cost
             ) for package in await PackageModel.get_all(session)
@@ -90,7 +116,7 @@ async def get_package(package_id: int, session: AsyncSession = Depends(SessionCo
         id=package.id,
         name=package.name,
         weight=package.weight,
-        type=package.type.name,
+        type={'id': package.type.id, 'name': package.type.name},
         value=package.value,
         delivery_cost=package.delivery_cost
     )

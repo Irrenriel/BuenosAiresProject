@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from logging import INFO
 
 from fastapi_utilities import repeat_every
@@ -12,6 +13,7 @@ from config import config
 class RedisConnector(Redis):
     EXCHANGE_RATE_URL = 'https://www.cbr-xml-daily.ru/daily_json.js'
 
+    @logger.catch
     async def update_exchange_rate(self):
         async with ClientSession() as session:
             for i in range(3):
@@ -20,7 +22,7 @@ class RedisConnector(Redis):
                         self.log(f'Wrong `cbr-xml-daily` API response status! (Status: {resp.status})', level=30)
                         continue
 
-                    data = await resp.json()
+                    data = json.loads(await resp.text())
 
                     if not (exchange_rate := data.get('Valute', {}).get('USD', {}).get('Value')):
                         self.log('Wrong `cbr-xml-daily` API values!', level=30)
@@ -30,7 +32,7 @@ class RedisConnector(Redis):
                     if not isinstance(exchange_rate, float):
                         exchange_rate = float(exchange_rate)
 
-                    await self.set('exchange_rate', exchange_rate)
+                    self.set('exchange_rate', exchange_rate)  # noqa
                     self.log('Successfully updated exchange rate!')
                     break
 
@@ -38,7 +40,7 @@ class RedisConnector(Redis):
                 self.log('Failed to update exchange rate!', level=30)
 
     async def get_exchange_rate(self):
-        if exchange_rate := await self.get('exchange_rate'):
+        if exchange_rate := self.get('exchange_rate'):
             return float(exchange_rate)
 
     @repeat_every(seconds=300)

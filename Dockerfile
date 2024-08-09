@@ -7,8 +7,16 @@ ENV PYTHONUNBUFFERED 1
 
 ADD requirements.txt .
 
-# Install python dependencies:
-RUN apt-get update & pip install --upgrade pip & pip install --no-cache-dir -r requirements.txt
+# Install dependencies:
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip & pip install --no-cache-dir -r requirements.txt
 
 ADD . .
 

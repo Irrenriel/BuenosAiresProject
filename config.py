@@ -21,7 +21,7 @@ class Config(BaseConfig):
     )
 
     ALEMBIC_CONNECT = URL.create(
-        drivername='mysql',
+        drivername='mysql+pymysql',
         username=getenv('MYSQL_USER'),
         password=getenv('MYSQL_PASSWORD'),
         host=getenv('MYSQL_HOST'),

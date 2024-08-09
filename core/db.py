@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import traceback
-from contextlib import asynccontextmanager
 
 from loguru import logger
 from sqlalchemy import Select
@@ -32,7 +31,6 @@ class Base(DeclarativeBase):
         return result[0] if result else result
 
 
-@asynccontextmanager
 async def SessionContext() -> AsyncSession:
     session = SessionMaker()
 
